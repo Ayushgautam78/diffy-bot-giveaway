@@ -271,6 +271,7 @@ async function submitPasswordLogin(e) {
     const res = await fetch(apiUrl('/api/auth/password-login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ username, password })
     });
     const data = await res.json();
@@ -286,7 +287,8 @@ async function submitPasswordLogin(e) {
       showToast(data.error || 'Invalid admin password', 'error');
     }
   } catch (err) {
-    showToast('Error signing in', 'error');
+    console.error('Password login error:', err);
+    showToast('Error signing in: ' + (err.message || 'Server network error'), 'error');
   }
 }
 
