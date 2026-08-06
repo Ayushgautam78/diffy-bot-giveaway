@@ -610,6 +610,13 @@ async function submitCreateGiveaway() {
     }
   };
 
+  const submitBtn = document.querySelector('#createModal .modal-footer .btn-primary');
+  if (submitBtn) {
+    if (submitBtn.disabled) return;
+    submitBtn.disabled = true;
+    submitBtn.innerText = '⏳ Publishing...';
+  }
+
   try {
     const res = await fetch(apiUrl('/api/giveaways'), {
       method: 'POST',
@@ -628,6 +635,11 @@ async function submitCreateGiveaway() {
   } catch (err) {
     console.error('Create giveaway error:', err);
     showToast('Error creating giveaway: ' + (err.message || 'Server error'), 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerText = '🚀 Publish Giveaway';
+    }
   }
 }
 

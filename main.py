@@ -3779,62 +3779,67 @@ async def resolve_giveaway_by_identifier(identifier: str) -> Optional[dict]:
     return None
 
 
+posting_giveaways: Set[str] = set()
+
 async def update_giveaway_discord_message(giveaway_id: str):
-    g = await resolve_giveaway_by_identifier(giveaway_id)
-    if not g or not isinstance(g, dict):
-        print(f"[UPDATE EMBED FAIL] Giveaway '{giveaway_id}' not found in memory or Cloud DB.")
+    if not giveaway_id or giveaway_id in posting_giveaways:
         return
-    giveaway_id = g.get("id", giveaway_id)
-
-    # Resolve target channel
-    ch_id_clean = re.sub(r'[^0-9]', '', str(g.get("channel_id", "")))
-    channel = None
-    if ch_id_clean:
-        try:
-            channel = bot.get_channel(int(ch_id_clean))
-            if not channel:
-                channel = await bot.fetch_channel(int(ch_id_clean))
-        except Exception:
-            channel = None
-
-    if not channel and bot.guilds:
-        for guild in bot.guilds:
-            channel = guild.system_channel or (guild.text_channels[0] if guild.text_channels else None)
-            if channel:
-                break
-
-    if not channel:
-        print(f"[UPDATE EMBED FAIL] Could not find valid channel for giveaway '{giveaway_id}'")
-        return
-
-    port = os.getenv("PORT", "3000")
-    domain = os.getenv("APP_URL", f"http://localhost:{port}")
-    embed, file_to_send = build_giveaway_embed(g)
-    view = GiveawayView(giveaway_id, domain)
-    mention_text = format_role_mention(g.get("mention_role"))
-
-    msg = None
-    msg_id_clean = re.sub(r'[^0-9]', '', str(g.get("message_id", "")))
-    if msg_id_clean:
-        try:
-            msg = await channel.fetch_message(int(msg_id_clean))
-        except Exception as fe:
-            print(f"[UPDATE EMBED FETCH] Old message {msg_id_clean} not found in #{channel.name}: {fe}")
-            msg = None
-
-    if msg:
-        try:
-            kwargs = {"content": mention_text, "embed": embed, "view": view}
-            if file_to_send:
-                kwargs["attachments"] = [file_to_send]
-            await msg.edit(**kwargs)
-            print(f"[UPDATE EMBED SUCCESS] In-place edited Discord embed for '{g.get('title')}' in #{channel.name} (preserved sent timestamp)")
-            return
-        except Exception as edit_err:
-            print(f"[UPDATE EMBED EDIT FAIL] {edit_err}, re-posting fresh message...")
-
-    # Post fresh message if old message was missing or failed to edit
+    posting_giveaways.add(giveaway_id)
     try:
+        g = await resolve_giveaway_by_identifier(giveaway_id)
+        if not g or not isinstance(g, dict):
+            print(f"[UPDATE EMBED FAIL] Giveaway '{giveaway_id}' not found in memory or Cloud DB.")
+            return
+        giveaway_id = g.get("id", giveaway_id)
+
+        # Resolve target channel
+        ch_id_clean = re.sub(r'[^0-9]', '', str(g.get("channel_id", "")))
+        channel = None
+        if ch_id_clean:
+            try:
+                channel = bot.get_channel(int(ch_id_clean))
+                if not channel:
+                    channel = await bot.fetch_channel(int(ch_id_clean))
+            except Exception:
+                channel = None
+
+        if not channel and bot.guilds:
+            for guild in bot.guilds:
+                channel = guild.system_channel or (guild.text_channels[0] if guild.text_channels else None)
+                if channel:
+                    break
+
+        if not channel:
+            print(f"[UPDATE EMBED FAIL] Could not find valid channel for giveaway '{giveaway_id}'")
+            return
+
+        port = os.getenv("PORT", "3000")
+        domain = os.getenv("APP_URL", f"http://localhost:{port}")
+        embed, file_to_send = build_giveaway_embed(g)
+        view = GiveawayView(giveaway_id, domain)
+        mention_text = format_role_mention(g.get("mention_role"))
+
+        msg = None
+        msg_id_clean = re.sub(r'[^0-9]', '', str(g.get("message_id", "")))
+        if msg_id_clean:
+            try:
+                msg = await channel.fetch_message(int(msg_id_clean))
+            except Exception as fe:
+                print(f"[UPDATE EMBED FETCH] Old message {msg_id_clean} not found in #{channel.name}: {fe}")
+                msg = None
+
+        if msg:
+            try:
+                kwargs = {"content": mention_text, "embed": embed, "view": view}
+                if file_to_send:
+                    kwargs["attachments"] = [file_to_send]
+                await msg.edit(**kwargs)
+                print(f"[UPDATE EMBED SUCCESS] In-place edited Discord embed for '{g.get('title')}' in #{channel.name} (preserved sent timestamp)")
+                return
+            except Exception as edit_err:
+                print(f"[UPDATE EMBED EDIT FAIL] {edit_err}, re-posting fresh message...")
+
+        # Post fresh message if old message was missing or failed to edit
         if file_to_send:
             new_msg = await channel.send(content=mention_text, embed=embed, view=view, file=file_to_send)
         else:
@@ -3849,6 +3854,8 @@ async def update_giveaway_discord_message(giveaway_id: str):
         print(f"[UPDATE EMBED POST SUCCESS] Posted fresh embed for '{g.get('title')}' in #{channel.name} ({new_msg.id})")
     except Exception as send_err:
         print(f"[UPDATE EMBED POST ERROR] {send_err}")
+    finally:
+        posting_giveaways.discard(giveaway_id)
 
 
 # -------- Slash Commands for Profile & Giveaways -------- #
@@ -5772,45 +5779,13 @@ async def start_health_server():
 
         giveaways[g_id] = g_data
         save_giveaways()
-        await firebase_put(f"giveaways/{g_id}", g_data)
 
         # Post Embed in Discord IMMEDIATELY on creation
-        ch_id_str = str(body.get("channel_id", "")).strip()
-        channel = None
-        if ch_id_str.isdigit():
-            channel = bot.get_channel(int(ch_id_str))
-            if not channel:
-                try:
-                    channel = await bot.fetch_channel(int(ch_id_str))
-                except Exception:
-                    channel = None
-
-        if not channel and bot.guilds:
-            for guild in bot.guilds:
-                channel = guild.system_channel or (guild.text_channels[0] if guild.text_channels else None)
-                if channel:
-                    break
-
-        if channel:
-            try:
-                embed, file_to_send = build_giveaway_embed(g_data)
-                port = os.getenv("PORT", "3000")
-                web_url = os.getenv("APP_URL", f"http://localhost:{port}")
-                view = GiveawayView(g_id, web_url)
-                mention_text = format_role_mention(g_data.get("mention_role"))
-                if file_to_send:
-                    msg = await channel.send(content=mention_text, embed=embed, view=view, file=file_to_send)
-                else:
-                    msg = await channel.send(content=mention_text, embed=embed, view=view)
-                g_data["message_id"] = str(msg.id)
-                g_data["channel_id"] = str(channel.id)
-                giveaways[g_id] = g_data
-                save_giveaways()
-                await firebase_put(f"giveaways/{g_id}", g_data)
-                bot.add_view(view)
-                print(f"[GIVEAWAY CREATED & POSTED] Sent giveaway '{g_data['title']}' to #{channel.name}")
-            except Exception as e:
-                print(f"[DISCORD POST ERROR] {e}")
+        try:
+            await update_giveaway_discord_message(g_id)
+            print(f"[GIVEAWAY CREATED & POSTED] Sent giveaway '{g_data['title']}' to Discord")
+        except Exception as e:
+            print(f"[DISCORD POST ERROR] {e}")
 
         return web.json_response(g_data)
 
