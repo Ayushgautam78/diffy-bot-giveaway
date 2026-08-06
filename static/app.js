@@ -622,10 +622,12 @@ async function submitCreateGiveaway() {
       closeModal('createModal');
       await loadGiveaways();
     } else {
-      showToast('Failed to create giveaway', 'error');
+      const errData = await res.json().catch(() => ({}));
+      showToast(errData.error || 'Failed to create giveaway', 'error');
     }
   } catch (err) {
-    showToast('Error creating giveaway', 'error');
+    console.error('Create giveaway error:', err);
+    showToast('Error creating giveaway: ' + (err.message || 'Server error'), 'error');
   }
 }
 
