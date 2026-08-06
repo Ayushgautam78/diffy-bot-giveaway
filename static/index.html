@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web3 Giveaway & Ticket Hub</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/" class="brand">
+      <div class="brand-logo">🎁</div>
+      <span class="brand-title">Web3 Giveaways</span>
+    </a>
+    
+    <div class="nav-actions">
+      <!-- Admin Create & Backup Buttons (Hidden if non-admin) -->
+      <button id="createGiveawayBtn" class="btn btn-primary" style="display: none;">
+        <span>⚡ Create Giveaway</span>
+      </button>
+      <button id="downloadBackupBtn" class="btn btn-outline" style="display: none;" onclick="downloadBackup()">
+        <span>📥 Backup</span>
+      </button>
+      <button id="restoreBackupBtn" class="btn btn-purple" style="display: none;" onclick="document.getElementById('backupFileInput').click()">
+        <span>📤 Restore</span>
+      </button>
+      <input type="file" id="backupFileInput" accept=".json" style="display: none;" onchange="handleRestoreBackup(this)">
+
+      <!-- User Profile / Auth Container -->
+      <div id="authContainer">
+        <button id="loginBtn" class="btn btn-purple" onclick="openModal('passLoginModal')">
+          🔐 Admin Sign In
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero-section">
+    <div class="hero-card">
+      <h1 class="hero-title">Exclusive Web3 Giveaways</h1>
+      <p class="hero-subtitle">Participate in NFT raffles, claim guaranteed whitelist spots, and FCFS rewards automatically verified by Discord Bot.</p>
+      
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-num" id="statActive">0</span>
+          <span class="stat-label">Active Giveaways</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" id="statTotalSpots">0</span>
+          <span class="stat-label">Total Spots Available</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" id="statEntries">0</span>
+          <span class="stat-label">Total Participants</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Feed Section -->
+  <main class="container">
+    <div class="section-header">
+      <h2 class="section-title">✨ Community Giveaways</h2>
+      <div class="tab-group">
+        <button class="tab-btn active" data-tab="active">Active</button>
+        <button class="tab-btn admin-only-tab" data-tab="ended" style="display:none;">Ended</button>
+        <button class="tab-btn admin-only-tab" data-tab="all" style="display:none;">All</button>
+      </div>
+    </div>
+
+    <!-- Grid Container -->
+    <div id="giveawayGrid" class="giveaway-grid">
+      <!-- Dynamic Giveaway Cards Injected Here -->
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        <p>Loading giveaways...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Create Giveaway Modal (Admin) -->
+  <div id="createModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">⚡ Create New Giveaway</h3>
+        <button class="modal-close" onclick="closeModal('createModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="createGiveawayForm">
+          <!-- Step 1: Basic Information -->
+          <div class="form-section-card">
+            <div class="form-section-header">
+              <span class="form-section-number">1</span>
+              <span>Basic Giveaway Details</span>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Giveaway Title *</label>
+              <input type="text" id="gTitle" class="form-input" placeholder="e.g. 5x Whitelist Spots — Project Alpha" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description / Instructions *</label>
+              <textarea id="gDesc" class="form-input" rows="3" placeholder="Enter description, requirements, rules, and details..." required></textarea>
+              <span class="form-hint">Markdown supported: **bold**, *italics*, `code`, [Link Text](https://link.com)</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Banner Image / GIF URL</label>
+              <input type="text" id="gBanner" class="form-input" placeholder="https://example.com/banner.png or upload image below">
+              <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('gBannerFile').click()">📷 Upload Banner Image</button>
+                <input type="file" id="gBannerFile" accept="image/*" style="display: none;" onchange="handleBannerFileUpload(this, 'gBanner', 'gBannerPreviewBox')">
+              </div>
+              <div id="gBannerPreviewBox" style="display: none; margin-top: 8px;">
+                <img src="" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);" alt="Preview">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label class="form-label">Network / Chain</label>
+                <input type="text" id="gNetwork" class="form-input" value="Ethereum" placeholder="Ethereum, Solana, Base, Bitcoin...">
+              </div>
+              <div class="form-group flex-1">
+                <label class="form-label">Duration</label>
+                <div style="display: flex; gap: 6px;">
+                  <input type="number" id="gDurationVal" class="form-input" value="24" min="0.1" step="0.1" style="flex: 1;">
+                  <select id="gDurationUnit" class="form-select" style="width: 100px;">
+                    <option value="minutes">Minutes</option>
+                    <option value="hours" selected>Hours</option>
+                    <option value="days">Days</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label class="form-label">Min Spots / Entry</label>
+                <input type="number" id="gMinPerUser" class="form-input" value="1" min="1">
+              </div>
+              <div class="form-group flex-1">
+                <label class="form-label">Max Spots / Entry</label>
+                <input type="number" id="gMaxPerUser" class="form-input" value="1" min="1">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Discord Channel for Giveaway Embed</label>
+              <select id="gChannel" class="form-select">
+                <option value="auto">⚡ Auto-Detect Main Channel</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Winner Announcement Channel (Optional)</label>
+              <select id="gWinnerChannel" class="form-select">
+                <option value="">📢 Same as Giveaway Channel (Default)</option>
+              </select>
+              <input type="text" id="gWinnerChannelManual" class="form-input" placeholder="Or enter Channel ID / #channel name manually..." style="margin-top: 6px; font-size: 0.85rem;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Role to Ping for Announcement (Optional)</label>
+              <select id="gMentionRole" class="form-select">
+                <option value="">🔕 No Ping (Silent Announcement)</option>
+                <option value="@everyone">🌐 @everyone</option>
+                <option value="@here">⚡ @here</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Step 2: Spot Tiers -->
+          <div class="form-section-card" style="margin-top: 1rem;">
+            <div class="form-section-header" style="justify-content: space-between;">
+              <div>
+                <span class="form-section-number">2</span>
+                <span>Spot Tiers & Winner Allocation</span>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addSpotTier()">+ Add Spot Tier</button>
+            </div>
+            
+            <div id="spotTiersList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+              <!-- Dynamic Spot Tiers inserted here -->
+            </div>
+          </div>
+
+          <!-- Step 3: Tasks & Social Requirements -->
+          <div class="form-section-card" style="margin-top: 1rem;">
+            <div class="form-section-header">
+              <span class="form-section-number">3</span>
+              <span>Interactive Tasks & Social Links</span>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="addDynamicTask('twitter_follow')">+ 🐦 Follow Twitter</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addDynamicTask('twitter_like')">+ ❤️ Like Tweet</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addDynamicTask('twitter_retweet')">+ 🔄 Retweet</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addDynamicTask('twitter_comment')">+ 💬 Comment</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addDynamicTask('tiktok_follow')">+ 🎵 Follow TikTok</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addDynamicTask('youtube_follow')">+ ▶️ Subscribe YouTube</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addDynamicTask('manual_task')">+ 📝 Custom Task</button>
+            </div>
+
+            <div id="dynamicTasksList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+              <!-- Dynamic Tasks inserted here -->
+            </div>
+
+            <div class="form-row" style="margin-top: 10px;">
+              <div class="form-group flex-1">
+                <label class="form-checkbox-label">
+                  <input type="checkbox" id="reqEvm" class="form-checkbox" checked>
+                  <span>Require EVM Wallet (0x...)</span>
+                </label>
+              </div>
+              <div class="form-group flex-1">
+                <label class="form-checkbox-label">
+                  <input type="checkbox" id="reqSolana" class="form-checkbox">
+                  <span>Require Solana Wallet</span>
+                </label>
+              </div>
+            </div>
+
+            <h5 style="margin-top: 12px; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-muted);">Social Media Direct Links (Buttons)</h5>
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <input type="text" id="gTwitterLink" class="form-input" placeholder="Twitter URL (https://x.com/...)">
+              </div>
+              <div class="form-group flex-1">
+                <input type="text" id="gDiscordLink" class="form-input" placeholder="Discord Invite URL">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <input type="text" id="gTelegramLink" class="form-input" placeholder="Telegram Group/Channel URL">
+              </div>
+              <div class="form-group flex-1">
+                <input type="text" id="gWebsiteLink" class="form-input" placeholder="Website URL">
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('createModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitCreateGiveaway()">🚀 Publish Giveaway</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Giveaway Modal (Admin) -->
+  <div id="editModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">✏️ Edit Giveaway</h3>
+        <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="editGiveawayForm">
+          <input type="hidden" id="editGId">
+
+          <div class="form-group">
+            <label class="form-label">Giveaway Title *</label>
+            <input type="text" id="editGTitle" class="form-input" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Description / Instructions *</label>
+            <textarea id="editGDesc" class="form-input" rows="3" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Banner Image / GIF URL</label>
+            <input type="text" id="editGBanner" class="form-input" placeholder="https://example.com/banner.png">
+            <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('editGBannerFile').click()">📷 Change Banner Image</button>
+              <input type="file" id="editGBannerFile" accept="image/*" style="display: none;" onchange="handleBannerFileUpload(this, 'editGBanner', 'editGBannerPreview')">
+            </div>
+            <div id="editGBannerPreview" style="display: none; margin-top: 8px;">
+              <img src="" style="width: 100%; max-height: 140px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-color);" alt="Preview">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Network / Chain</label>
+              <input type="text" id="editGNetwork" class="form-input">
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Duration</label>
+              <div style="display: flex; gap: 6px;">
+                <input type="number" id="editGDurationVal" class="form-input" value="24" min="0.1" step="0.1" style="flex: 1;">
+                <select id="editGDurationUnit" class="form-select" style="width: 100px;">
+                  <option value="minutes">Minutes</option>
+                  <option value="hours">Hours</option>
+                  <option value="days">Days</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label class="form-label">Min Spots / Entry</label>
+              <input type="number" id="editGMinPerUser" class="form-input" min="1">
+            </div>
+            <div class="form-group flex-1">
+              <label class="form-label">Max Spots / Entry</label>
+              <input type="number" id="editGMaxPerUser" class="form-input" min="1">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Discord Channel</label>
+            <select id="editGChannel" class="form-select"></select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Winner Channel (Optional)</label>
+            <select id="editGWinnerChannel" class="form-select"></select>
+            <input type="text" id="editGWinnerChannelManual" class="form-input" placeholder="Or enter Channel ID / name manually..." style="margin-top: 6px; font-size: 0.85rem;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mention Role</label>
+            <select id="editGMentionRole" class="form-select"></select>
+          </div>
+
+          <!-- Spot Tiers -->
+          <div class="form-section-card" style="margin-top: 1rem;">
+            <div class="form-section-header" style="justify-content: space-between;">
+              <span>Spot Tiers</span>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addEditSpotTier()">+ Add Spot Tier</button>
+            </div>
+            <div id="editSpotTiersList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;"></div>
+          </div>
+
+          <!-- Tasks -->
+          <div class="form-section-card" style="margin-top: 1rem;">
+            <div class="form-section-header" style="justify-content: space-between;">
+              <span>Tasks & Requirements</span>
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="addEditDynamicTask('twitter_follow')">+ 🐦 Follow</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addEditDynamicTask('twitter_like')">+ ❤️ Like</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addEditDynamicTask('twitter_retweet')">+ 🔄 Retweet</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addEditDynamicTask('twitter_comment')">+ 💬 Comment</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addEditDynamicTask('tiktok_follow')">+ 🎵 TikTok</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addEditDynamicTask('youtube_follow')">+ ▶️ YouTube</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="addEditDynamicTask('manual_task')">+ 📝 Custom</button>
+            </div>
+
+            <div id="editDynamicTasksList" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;"></div>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label class="form-checkbox-label">
+                  <input type="checkbox" id="editReqEvm" class="form-checkbox">
+                  <span>Require EVM Wallet</span>
+                </label>
+              </div>
+              <div class="form-group flex-1">
+                <label class="form-checkbox-label">
+                  <input type="checkbox" id="editReqSolana" class="form-checkbox">
+                  <span>Require Solana Wallet</span>
+                </label>
+              </div>
+            </div>
+
+            <h5 style="margin-top: 12px; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-muted);">Social Links</h5>
+            <div class="form-row">
+              <div class="form-group flex-1"><input type="text" id="editGTwitterLink" class="form-input" placeholder="Twitter URL"></div>
+              <div class="form-group flex-1"><input type="text" id="editGDiscordLink" class="form-input" placeholder="Discord URL"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group flex-1"><input type="text" id="editGTelegramLink" class="form-input" placeholder="Telegram URL"></div>
+              <div class="form-group flex-1"><input type="text" id="editGWebsiteLink" class="form-input" placeholder="Website URL"></div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('editModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitEditGiveaway()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail & Admin Control Modal -->
+  <div id="detailModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="detailTitle">Giveaway Details</h3>
+        <button class="modal-close" onclick="closeModal('detailModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="detailContent">
+          <!-- Main content populated dynamically -->
+        </div>
+
+        <!-- Public Participant List -->
+        <div style="border-top: 1px solid var(--border-color); margin-top: 1.5rem; padding-top: 1rem;">
+          <h4 style="color: var(--text-main); margin-bottom: 10px;">👥 Participants</h4>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Discord Username</th>
+                  <th>Discord ID</th>
+                  <th id="publicWalletHeader">Wallet Address</th>
+                </tr>
+              </thead>
+              <tbody id="publicParticipantsBody">
+                <!-- Public participants loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Admin Control Box -->
+        <div id="adminControlBox" style="display: none; border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+          <h4 style="color: var(--primary); margin-bottom: 10px;">👑 Admin Winner Drawing & Controls</h4>
+          
+          <div style="display: flex; gap: 10px; margin-bottom: 1rem; flex-wrap: wrap;">
+            <button id="editGiveawayAdminBtn" class="btn btn-primary btn-sm">✏️ Edit Giveaway</button>
+            <button id="setCustomWinnersAdminBtn" class="btn btn-purple btn-sm" onclick="openCustomWinnersModal()">✨ Set Fabricated / Custom Winners</button>
+            <button id="drawWinnersBtn" class="btn btn-outline btn-sm">🎲 Auto Draw Winners</button>
+            <button id="redrawWinnersBtn" class="btn btn-outline btn-sm">🔄 Re-Raffle Disqualified Spots</button>
+            <button id="announceWinnersBtn" class="btn btn-primary btn-sm">📢 Send Winners Announcement</button>
+            <button id="exportAllEntriesBtn" class="btn btn-primary btn-sm">📥 Download All Entries (CSV)</button>
+            <button id="exportWinnersBtn" class="btn btn-outline btn-sm">🏆 Export Winners Only (CSV)</button>
+            <button id="deleteGiveawayAdminBtn" class="btn btn-danger btn-sm">🗑️ Delete Giveaway</button>
+          </div>
+
+          <h5 style="font-size: 0.9rem; margin-bottom: 8px;">Participants & Entries</h5>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Discord User</th>
+                  <th>Spot Entry</th>
+                  <th>EVM Wallet</th>
+                  <th>Solana Wallet</th>
+                  <th>Socials</th>
+                  <th>Task Verification</th>
+                </tr>
+              </thead>
+              <tbody id="participantsTableBody">
+                <!-- Participants loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('detailModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fabricate / Set Custom Winners Modal -->
+  <div id="customWinnersModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🏆 Set Fabricated / Custom Winners</h3>
+        <button class="modal-close" onclick="closeModal('customWinnersModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="form-hint" style="margin-bottom: 12px;">Type a member's name/username below to search server members and select winners for GTD (Guaranteed) and FCFS tiers.</p>
+        
+        <!-- Live Member Search Bar -->
+        <div class="form-group" style="position: relative; margin-bottom: 16px;">
+          <label class="form-label">🔍 Search Server Members by Name or ID</label>
+          <input type="text" id="memberSearchInput" class="form-input" placeholder="Type username or display name..." oninput="onMemberSearchInput(this.value)">
+          
+          <div id="memberSearchResults" class="member-search-results" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; max-height: 220px; overflow-y: auto; z-index: 1000; box-shadow: 0 8px 24px rgba(0,0,0,0.4);">
+            <!-- Live member search items -->
+          </div>
+        </div>
+
+        <!-- Section 1: Guaranteed Winners (GTD) -->
+        <div class="form-section-card" style="margin-bottom: 14px;">
+          <div class="form-section-header" style="justify-content: space-between;">
+            <span style="color: var(--primary); font-weight: 700;">🌟 Guaranteed (GTD) Winners</span>
+            <span id="gtdSelectedCount" class="g-badge g-badge-guaranteed">0 Selected</span>
+          </div>
+          <div id="gtdWinnersTags" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; border: 1px dashed var(--border-color); border-radius: 8px; padding: 8px; background: rgba(0,0,0,0.1);">
+            <span class="placeholder-text" style="color: var(--text-muted); font-size: 0.82rem;">Selected GTD winners will appear here...</span>
+          </div>
+          <textarea id="gtdWinnersManual" class="form-input" rows="2" placeholder="Or paste GTD winner mentions/IDs (e.g. <@123>, @username)..." style="margin-top: 8px; font-size: 0.82rem;"></textarea>
+        </div>
+
+        <!-- Section 2: FCFS Winners -->
+        <div class="form-section-card">
+          <div class="form-section-header" style="justify-content: space-between;">
+            <span style="color: var(--purple); font-weight: 700;">⚡ FCFS Winners</span>
+            <span id="fcfsSelectedCount" class="g-badge g-badge-fcfs">0 Selected</span>
+          </div>
+          <div id="fcfsWinnersTags" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; border: 1px dashed var(--border-color); border-radius: 8px; padding: 8px; background: rgba(0,0,0,0.1);">
+            <span class="placeholder-text" style="color: var(--text-muted); font-size: 0.82rem;">Selected FCFS winners will appear here...</span>
+          </div>
+          <textarea id="fcfsWinnersManual" class="form-input" rows="3" placeholder="Or paste FCFS winner mentions/IDs (e.g. <@123>, @username)..." style="margin-top: 8px; font-size: 0.82rem;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('customWinnersModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitCustomWinners()">🚀 Set & Publish Winners to Discord</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Profile & Wallet Settings Modal -->
+  <div id="profileModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">👤 Your Web3 Profile & Wallets</h3>
+        <button class="modal-close" onclick="closeModal('profileModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="profileForm">
+          <div class="form-group">
+            <label class="form-label">Twitter / X Handle</label>
+            <input type="text" id="profTwitter" class="form-input" placeholder="@yourhandle">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Telegram Handle</label>
+            <input type="text" id="profTelegram" class="form-input" placeholder="@username">
+          </div>
+          <div class="form-group">
+            <label class="form-label">EVM Wallet Address (0x...)</label>
+            <input type="text" id="profEvm" class="form-input" placeholder="0x1234...5678">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Solana Wallet Address</label>
+            <input type="text" id="profSolana" class="form-input" placeholder="Solana Wallet Public Key">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('profileModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitSaveProfile()">Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Password Sign-In Modal -->
+  <div id="passLoginModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h3 class="modal-title">🔐 Admin Password Sign-In</h3>
+        <button class="modal-close" onclick="closeModal('passLoginModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="passLoginForm" onsubmit="submitPasswordLogin(event)">
+          <div class="form-group">
+            <label class="form-label">Admin Username / User ID</label>
+            <input type="text" id="passUser" class="form-input" placeholder="Admin username" value="Admin" required>
+          </div>
+          <div class="form-group" style="margin-top: 10px;">
+            <label class="form-label">Admin Password</label>
+            <input type="password" id="passWord" class="form-input" placeholder="Enter admin password" required>
+          </div>
+          <button type="submit" class="btn btn-purple" style="width: 100%; margin-top: 15px;">🚀 Sign In as Admin</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <footer>
+    <p>Web3 Bot System &copy; 2026. High performance Web3 & Discord integration.</p>
+  </footer>
+
+  <script>
+    window.ARCIE_API_BASE = '';
+  </script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
