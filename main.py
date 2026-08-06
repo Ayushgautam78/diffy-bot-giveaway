@@ -5444,9 +5444,6 @@ async def start_health_server():
 
     # Guild Channels Endpoint
     async def guilds_handler(request):
-        user = get_session_user(request)
-        if not user or not user.get("is_admin"):
-            return web.json_response({"error": "Admin required"}, status=403)
         channels = []
         for guild in bot.guilds:
             for ch in guild.text_channels:
@@ -5457,13 +5454,20 @@ async def start_health_server():
                         "guild_name": guild.name,
                         "guild_id": str(guild.id)
                     })
+        
+        # Fallback to Firebase if bot.guilds is loading
+        if not channels and FIREBASE_URL:
+            try:
+                fb_ch = await firebase_get("channels")
+                if fb_ch and isinstance(fb_ch, list):
+                    channels = fb_ch
+            except Exception:
+                pass
+
         return web.json_response(channels)
 
     # Guild Roles Endpoint
     async def guilds_roles_handler(request):
-        user = get_session_user(request)
-        if not user or not user.get("is_admin"):
-            return web.json_response({"error": "Admin required"}, status=403)
         roles = []
         for guild in bot.guilds:
             for role in guild.roles:
@@ -5483,6 +5487,16 @@ async def start_health_server():
                     "guild_id": str(guild.id),
                     "mention": f"<@&{role.id}>"
                 })
+
+        # Fallback to Firebase if bot.guilds is loading
+        if not roles and FIREBASE_URL:
+            try:
+                fb_roles = await firebase_get("roles")
+                if fb_roles and isinstance(fb_roles, list):
+                    roles = fb_roles
+            except Exception:
+                pass
+
         return web.json_response(roles)
 
     async def search_members_handler(request):
@@ -6456,6 +6470,7 @@ async def start_health_server():
     app.router.add_get("/api/auth/me", auth_me_handler)
     app.router.add_post("/api/auth/password-login", auth_password_login_handler)
     app.router.add_get("/api/guilds", guilds_handler)
+    app.router.add_get("/api/guilds/channels", guilds_handler)
     app.router.add_get("/api/guilds/roles", guilds_roles_handler)
     app.router.add_get("/api/members/search", search_members_handler)
     app.router.add_get("/api/tickets", get_tickets_handler)

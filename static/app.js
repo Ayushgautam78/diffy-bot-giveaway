@@ -281,6 +281,8 @@ async function submitPasswordLogin(e) {
       showToast('🚀 Signed in as Admin!', 'success');
       closeModal('passLoginModal');
       checkAuth();
+      await loadGuildChannels();
+      await loadGuildRoles();
       await loadGiveaways();
       return;
     } else {
