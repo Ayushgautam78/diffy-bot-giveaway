@@ -7296,20 +7296,6 @@ async def royal_rumble_cmd(
         roles_to_ping=roles_list if roles_list else None,
         interaction_obj=interaction
     )
-@bot.tree.command(name="ticketpanel", description="Posts the Support Ticket Panel embed with interactive buttons!")
-@app_commands.describe(
-    target_channel="Optional: Channel to post ticket panel in",
-    category="Optional: Select Category or enter Category ID for ticket channels"
-)
-async def ticketpanel_cmd(
-    interaction: discord.Interaction,
-    target_channel: Optional[discord.TextChannel] = None,
-    category: Optional[discord.CategoryChannel] = None
-):
-    if not is_mod_or_admin(interaction):
-        await interaction.response.send_message("❌ **Access Denied!** Only moderators and admins can create ticket panels!", ephemeral=True)
-        return
-
 
 @bot.tree.command(name="ticketpanel", description="Posts the Support Ticket Panel embed with interactive buttons!")
 @app_commands.describe(
