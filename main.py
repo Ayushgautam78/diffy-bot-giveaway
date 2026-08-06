@@ -5621,15 +5621,16 @@ async def start_health_server():
         except Exception:
             return web.json_response({"error": "Invalid JSON"}, status=400)
             
-        username = body.get("username", "Admin").strip()
-        password = body.get("password", "").strip()
+        username = str(body.get("username", "Admin")).strip()
+        password = str(body.get("password", "")).strip()
         
-        admin_pass = os.getenv("ADMIN_PASSWORD", "pandalodumkc@78")
+        admin_pass = str(os.getenv("ADMIN_PASSWORD", "pandalodumkc@78")).strip()
         
         if not password:
             return web.json_response({"error": "Password required"}, status=400)
             
         if password != admin_pass:
+            print(f"[AUTH LOGIN FAIL] Incorrect password attempt for username '{username}'")
             return web.json_response({"error": "Invalid admin password"}, status=401)
             
         admin_user = {
@@ -5642,7 +5643,8 @@ async def start_health_server():
         active_sessions[token] = {"user": admin_user, "expires_at": time.time() + 86400 * 30}
         
         resp = web.json_response({"success": True, "user": admin_user})
-        resp.set_cookie("session_token", token, max_age=86400 * 30, path="/")
+        resp.set_cookie("session_token", token, max_age=86400 * 30, path="/", samesite="Lax")
+        print(f"[AUTH LOGIN SUCCESS] Admin '{username}' signed in successfully.")
         return resp
 
     async def create_giveaway_handler(request):
