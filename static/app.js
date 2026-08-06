@@ -1,7 +1,7 @@
-/* SPA Logic for Web3 Giveaway Hub */
+/* SPA Logic for Diffy Bot — Differential Degens Giveaway Hub */
 
 function apiUrl(path) {
-  const base = (window.ARCIE_API_BASE || '').replace(/\/+$/, '');
+  const base = (window.DIFFY_API_BASE || '').replace(/\/+$/, '');
   return base ? `${base}${path}` : path;
 }
 
@@ -410,7 +410,7 @@ function renderGiveaways() {
         <div class="g-card-footer">
           <span style="font-size: 0.85rem; color: var(--text-muted);">👥 ${g.entries_count || 0} Entered</span>
           <div style="display: flex; gap: 6px; align-items: center;">
-            ${isAdmin ? `<button type="button" class="btn btn-danger btn-sm" style="padding: 4px 8px;" onclick="deleteGiveaway('${g.id}')" title="Delete Giveaway">🗑️</button>` : ''}
+            ${isAdmin ? `<button type="button" class="btn btn-danger btn-sm" style="padding: 4px 8px;" onclick="event.stopPropagation(); deleteGiveaway('${g.id}')" title="Delete Giveaway">🗑️</button>` : ''}
             <button class="btn btn-primary btn-sm" onclick="openDetailModal('${g.id}')">
               ${isEnded ? 'View Results' : 'View Giveaway'}
             </button>
@@ -441,7 +441,7 @@ function addSpotTier(defaultName = '', defaultCount = 1) {
   div.innerHTML = `
     <input type="text" class="form-input spot-tier-name" value="${escapeHtml(defaultName)}" placeholder="Tier Name (e.g. GTD, FCFS, VIP)" style="flex: 2; padding: 6px 10px; font-size: 0.85rem;">
     <input type="number" class="form-input spot-tier-count" value="${defaultCount}" min="1" placeholder="Spots" style="flex: 1; padding: 6px 10px; font-size: 0.85rem;">
-    <button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById('${id}').remove()" style="padding: 4px 8px;">🗑️</button>
+    <button type="button" class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete this spot tier?')) document.getElementById('${id}').remove()" style="padding: 4px 8px;">🗑️</button>
   `;
 
   container.appendChild(div);
@@ -495,7 +495,7 @@ function addDynamicTask(type, defaultVal = '') {
   div.innerHTML = `
     <span class="g-badge g-badge-fcfs" style="min-width: 90px; text-align: center;">${typeBadge}</span>
     <input type="text" class="form-input dynamic-task-val" data-type="${type}" value="${escapeHtml(defaultVal)}" placeholder="${placeholder}" style="flex: 1; padding: 6px 10px; font-size: 0.85rem;">
-    <button type="button" class="btn btn-danger btn-sm" onclick="document.getElementById('${id}').remove()" style="padding: 4px 8px;">🗑️</button>
+    <button type="button" class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete this task requirement?')) document.getElementById('${id}').remove()" style="padding: 4px 8px;">🗑️</button>
   `;
 
   container.appendChild(div);
@@ -863,7 +863,7 @@ async function redrawWinners(giveawayId) {
 }
 
 async function deleteParticipantEntry(giveawayId, userId) {
-  if (!confirm('Are you sure you want to remove this participant entry?')) return;
+  if (!confirm('⚠️ Are you sure you want to remove this participant entry?')) return;
   try {
     await fetch(apiUrl(`/api/giveaways/${giveawayId}/entries/${userId}/delete`), { method: 'POST', credentials: 'include' });
     showToast('🗑️ Participant entry removed!', 'success');
@@ -871,6 +871,227 @@ async function deleteParticipantEntry(giveawayId, userId) {
     await loadGiveaways();
   } catch (err) {
     showToast('Error deleting entry', 'error');
+  }
+}
+
+async function deleteGiveaway(giveawayId) {
+  if (!confirm('⚠️ Are you sure you want to PERMANENTLY delete this giveaway?\n\nThis will remove all participant entries and delete the giveaway post from Discord.')) return;
+  try {
+    const res = await fetch(apiUrl(`/api/giveaways/${giveawayId}/delete`), { method: 'POST', credentials: 'include' });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('🗑️ Giveaway deleted successfully!', 'success');
+      closeModal('detailModal');
+      closeModal('editModal');
+      await loadGiveaways();
+    } else {
+      showToast(data.error || 'Failed to delete giveaway', 'error');
+    }
+  } catch (err) {
+    showToast('Error deleting giveaway', 'error');
+  }
+}
+
+let editSpotTierCount = 0;
+function addEditSpotTier(defaultName = '', defaultCount = 1) {
+  const container = document.getElementById('editSpotTiersList');
+  if (!container) return;
+  editSpotTierCount++;
+  const id = `edit_spot_tier_${editSpotTierCount}`;
+  const div = document.createElement('div');
+  div.id = id;
+  div.style.display = 'flex';
+  div.style.gap = '8px';
+  div.style.alignItems = 'center';
+  div.style.background = 'rgba(0,0,0,0.2)';
+  div.style.padding = '6px 10px';
+  div.style.borderRadius = 'var(--radius-sm)';
+  div.style.border = '1px solid var(--border-color)';
+  div.innerHTML = `
+    <input type="text" class="form-input edit-spot-tier-name" value="${escapeHtml(defaultName)}" placeholder="Tier Name" style="flex: 2; padding: 6px 10px; font-size: 0.85rem;">
+    <input type="number" class="form-input edit-spot-tier-count" value="${defaultCount}" min="1" placeholder="Spots" style="flex: 1; padding: 6px 10px; font-size: 0.85rem;">
+    <button type="button" class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete this spot tier?')) document.getElementById('${id}').remove()" style="padding: 4px 8px;">🗑️</button>
+  `;
+  container.appendChild(div);
+}
+
+let editTaskCount = 0;
+function addEditDynamicTask(type, defaultVal = '') {
+  const container = document.getElementById('editDynamicTasksList');
+  if (!container) return;
+  editTaskCount++;
+  const id = `edit_task_${editTaskCount}`;
+  const div = document.createElement('div');
+  div.id = id;
+  div.style.display = 'flex';
+  div.style.gap = '8px';
+  div.style.alignItems = 'center';
+  div.style.background = 'rgba(0,0,0,0.2)';
+  div.style.padding = '8px 12px';
+  div.style.borderRadius = 'var(--radius-sm)';
+  div.style.border = '1px solid var(--border-color)';
+
+  let typeBadge = '';
+  let placeholder = '';
+  if (type === 'twitter_follow') { typeBadge = '🐦 Follow'; placeholder = 'Handle'; }
+  else if (type === 'twitter_like') { typeBadge = '❤️ Like'; placeholder = 'Tweet URL'; }
+  else if (type === 'twitter_retweet') { typeBadge = '🔄 Retweet'; placeholder = 'Tweet URL'; }
+  else if (type === 'twitter_comment') { typeBadge = '💬 Comment'; placeholder = 'Tweet URL'; }
+  else if (type === 'tiktok_follow') { typeBadge = '🎵 TikTok'; placeholder = 'TikTok Handle'; }
+  else if (type === 'youtube_follow') { typeBadge = '▶️ YouTube'; placeholder = 'Channel Link'; }
+  else { typeBadge = '📝 Custom'; placeholder = 'Instructions...'; }
+
+  div.innerHTML = `
+    <span class="g-badge g-badge-fcfs" style="min-width: 90px; text-align: center;">${typeBadge}</span>
+    <input type="text" class="form-input edit-dynamic-task-val" data-type="${type}" value="${escapeHtml(defaultVal)}" placeholder="${placeholder}" style="flex: 1; padding: 6px 10px; font-size: 0.85rem;">
+    <button type="button" class="btn btn-danger btn-sm" onclick="if (confirm('Are you sure you want to delete this task?')) document.getElementById('${id}').remove()" style="padding: 4px 8px;">🗑️</button>
+  `;
+  container.appendChild(div);
+}
+
+async function openEditModal(giveawayId) {
+  try {
+    const res = await fetch(apiUrl(`/api/giveaways/${giveawayId}`), { credentials: 'include' });
+    if (!res.ok) {
+      showToast('Failed to fetch giveaway details for editing', 'error');
+      return;
+    }
+    const g = await res.json();
+    document.getElementById('editGId').value = g.id;
+    document.getElementById('editGTitle').value = g.title || '';
+    document.getElementById('editGDesc').value = g.description || '';
+    document.getElementById('editGBanner').value = g.banner_url || '';
+    document.getElementById('editGNetwork').value = g.network || 'Ethereum';
+    document.getElementById('editGDurationVal').value = g.duration_val || g.duration_hours || 24;
+    document.getElementById('editGDurationUnit').value = g.duration_unit || 'hours';
+    document.getElementById('editGMinPerUser').value = g.min_per_user || 1;
+    document.getElementById('editGMaxPerUser').value = g.max_per_user || 1;
+    if (document.getElementById('editGChannel')) document.getElementById('editGChannel').value = g.channel_id || '';
+    if (document.getElementById('editGWinnerChannel')) document.getElementById('editGWinnerChannel').value = g.winner_channel_id || '';
+    if (document.getElementById('editGMentionRole')) document.getElementById('editGMentionRole').value = g.mention_role || '';
+
+    // Spot Tiers
+    const spotTiersList = document.getElementById('editSpotTiersList');
+    if (spotTiersList) {
+      spotTiersList.innerHTML = '';
+      if (g.spot_tiers && g.spot_tiers.length) {
+        g.spot_tiers.forEach(st => addEditSpotTier(st.name, st.count));
+      } else {
+        addEditSpotTier('Guaranteed', g.guaranteed_spots || 3);
+        addEditSpotTier('FCFS', g.fcfs_spots || 20);
+      }
+    }
+
+    // Dynamic Tasks
+    const tasksList = document.getElementById('editDynamicTasksList');
+    if (tasksList) {
+      tasksList.innerHTML = '';
+      if (g.tasks) {
+        if (g.tasks.twitter_follow) addEditDynamicTask('twitter_follow', g.tasks.twitter_follow);
+        if (g.tasks.twitter_like) addEditDynamicTask('twitter_like', g.tasks.twitter_like);
+        if (g.tasks.twitter_retweet) addEditDynamicTask('twitter_retweet', g.tasks.twitter_retweet);
+        if (g.tasks.twitter_comment) addEditDynamicTask('twitter_comment', g.tasks.twitter_comment);
+        if (g.tasks.tiktok_follow) addEditDynamicTask('tiktok_follow', g.tasks.tiktok_follow);
+        if (g.tasks.youtube_follow) addEditDynamicTask('youtube_follow', g.tasks.youtube_follow);
+        if (g.tasks.manual) addEditDynamicTask('manual_task', g.tasks.manual);
+      }
+    }
+
+    const preview = document.getElementById('editGBannerPreview');
+    if (preview) {
+      if (g.banner_url) {
+        preview.querySelector('img').src = g.banner_url;
+        preview.style.display = 'block';
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    openModal('editModal');
+  } catch (err) {
+    showToast('Error opening edit modal', 'error');
+  }
+}
+
+async function submitEditGiveaway() {
+  const gId = document.getElementById('editGId').value;
+  if (!gId) return;
+
+  const title = document.getElementById('editGTitle').value.trim();
+  const description = document.getElementById('editGDesc').value.trim();
+  const banner_url = document.getElementById('editGBanner').value.trim();
+  const network = document.getElementById('editGNetwork').value.trim() || 'Ethereum';
+  const duration_val = parseFloat(document.getElementById('editGDurationVal').value) || 24;
+  const duration_unit = document.getElementById('editGDurationUnit').value || 'hours';
+  const min_per_user = parseInt(document.getElementById('editGMinPerUser').value) || 1;
+  const max_per_user = parseInt(document.getElementById('editGMaxPerUser').value) || 1;
+  const channel_id = document.getElementById('editGChannel') ? document.getElementById('editGChannel').value : '';
+  const winnerChannelSelect = document.getElementById('editGWinnerChannel') ? document.getElementById('editGWinnerChannel').value : '';
+  const winnerChannelManual = document.getElementById('editGWinnerChannelManual') ? document.getElementById('editGWinnerChannelManual').value.trim() : '';
+  const winner_channel_id = winnerChannelManual || winnerChannelSelect || '';
+  const mention_role = document.getElementById('editGMentionRole') ? document.getElementById('editGMentionRole').value : '';
+
+  if (!title || !description) {
+    showToast('Please fill in required fields (Title & Description)', 'error');
+    return;
+  }
+
+  const spot_tiers = [];
+  document.querySelectorAll('#editSpotTiersList > div').forEach(row => {
+    const nameInput = row.querySelector('.edit-spot-tier-name');
+    const countInput = row.querySelector('.edit-spot-tier-count');
+    if (nameInput && countInput) {
+      const name = nameInput.value.trim();
+      const count = parseInt(countInput.value) || 0;
+      if (name && count > 0) {
+        spot_tiers.push({ name, count });
+      }
+    }
+  });
+
+  const tasksPayload = [];
+  document.querySelectorAll('.edit-dynamic-task-val').forEach(input => {
+    const val = input.value.trim();
+    const type = input.dataset.type;
+    if (val) {
+      tasksPayload.push({ type, value: val });
+    }
+  });
+
+  const payload = {
+    title,
+    description,
+    banner_url,
+    network,
+    duration_val,
+    duration_unit,
+    min_per_user,
+    max_per_user,
+    channel_id,
+    winner_channel_id,
+    mention_role,
+    spot_tiers,
+    tasks_payload: tasksPayload
+  };
+
+  try {
+    const res = await fetch(apiUrl(`/api/giveaways/${gId}/edit`), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('✏️ Giveaway updated & synced to Discord!', 'success');
+      closeModal('editModal');
+      await openDetailModal(gId);
+      await loadGiveaways();
+    } else {
+      showToast(data.error || 'Failed to edit giveaway', 'error');
+    }
+  } catch (err) {
+    showToast('Error editing giveaway', 'error');
   }
 }
 

@@ -607,7 +607,7 @@ class TicketLaunchView(discord.ui.View):
             ),
             color=discord.Color.blue()
         )
-        embed.set_footer(text="Click the control buttons below to manage this ticket | Powered by Arcie Bot")
+        embed.set_footer(text="Click the control buttons below to manage this ticket | Powered by Diffy Bot")
         if interaction.guild.icon:
             embed.set_thumbnail(url=interaction.guild.icon.url)
 
@@ -1216,7 +1216,7 @@ async def tldr_summary(message: discord.Message) -> str:
             return "There isn't any recent drama to summarize! It's been a ghost town in here."
 
         system_prompt = (
-            'You are "Arcie", a sassy, clever, and highly observant girl chatting in a Discord server. '
+            'You are "Diffy", a sassy, clever, and highly observant girl chatting in a Discord server. '
             'Read the provided Discord chat logs of the last 50 messages and create a concise, highly entertaining summary. '
             'Call out specific people by name if they said something funny or ridiculous. Keep your classic sweet/sassy attitude!'
         )
@@ -1452,7 +1452,7 @@ async def ai_reply(message: discord.Message) -> str:
     # 5. Live Web Context
     live_web_context = ""
     if re.search(r'(2024|2025|2026|latest|recent|now|today|news|weather|football|soccer|transfers?|matches?|standings?|league|cl|ucl|pl|premier league|laliga|bundesliga|serie a|ligue 1|scores?|arsenal|chelsea|liverpool|manchester|real madrid|barcelona|bayern|psg|haaland|mbappe|messi|ronaldo)', content_lower) and len(content_lower.split()) > 2:
-        clean_q = re.sub(r'arcie|diffy|unemployed girl|unemployed', '', message.content, flags=re.IGNORECASE).strip()
+        clean_q = re.sub(r'diffy|diffybot|unemployed girl|unemployed', '', message.content, flags=re.IGNORECASE).strip()
         searchResults = await fetch_realtime_context(clean_q)
         if searchResults:
             live_web_context = f"\n\nLIVE INTERNET SEARCH RESULTS: {searchResults}"
@@ -1465,7 +1465,7 @@ async def ai_reply(message: discord.Message) -> str:
             parsed_m = parse_message_media_and_emojis(m)
             if parsed_m:
                 m_time = m.created_at.strftime("%H:%M")
-                name = "Arcie (You)" if m.author.id == bot.user.id else f"{m.author.display_name} (@{m.author.name} | ID: {m.author.id})"
+                name = "Diffy (You)" if m.author.id == bot.user.id else f"{m.author.display_name} (@{m.author.name} | ID: {m.author.id})"
                 recent_msgs.append(f"[{m_time}] [{name}]: {parsed_m}")
         recent_msgs.reverse()
         if recent_msgs:
@@ -1474,7 +1474,7 @@ async def ai_reply(message: discord.Message) -> str:
         pass
 
     system_prompt = (
-        f'You are "Arcie", a 100% real human girl chatting in a Discord server. YOU ARE A REAL GIRL. DO NOT ACT LIKE A BOT OR AN AI ASSISTANT.\n\n'
+        f'You are "Diffy", a 100% real human girl chatting in a Discord server. YOU ARE A REAL GIRL. DO NOT ACT LIKE A BOT OR AN AI ASSISTANT.\n\n'
         f'🚨 100% REAL HUMAN CHAT STYLE (CRITICAL):\n'
         f'1. Speak completely naturally with real human warmth, casual tone, friendly vibe, and genuine emotion! (e.g. "Hey! What\'s up?", "Oh haha true!", "Hey there!").\n'
         f'2. NEVER EVER output raw code strings like "<@123456789>" or "<@id>"! Always refer to people naturally by their Display Name.\n'
@@ -1487,8 +1487,8 @@ async def ai_reply(message: discord.Message) -> str:
         f'1. Remember member names, facts, nicknames, preferences, and past events across days and weeks.\n'
         f'2. If anyone asks about past events or previous conversations, recall the details naturally as a real friend.\n\n'
         f'### CRITICAL NAME RULES:\n'
-        f'1. Your name is "Arcie". If anyone asks your name or who you are, reply naturally: "I\'m Arcie!" or "My name\'s Arcie!".\n'
-        f'2. NEVER prefix your replies with "Arcie:". Just output your chat message directly.\n\n'
+        f'1. Your name is "Diffy". If anyone asks your name or who you are, reply naturally: "I\'m Diffy!" or "My name\'s Diffy!".\n'
+        f'2. NEVER prefix your replies with "Diffy:". Just output your chat message directly.\n\n'
         f'### CURRENT CONVERSATION TARGET:\n'
         f'• CURRENT SENDER: **{message.author.display_name}** (@{message.author.name}). Respond directly to **{message.author.display_name}**!'
         f'{user_facts_str}{member_directory_str}{historical_search_str}{server_emojis}{live_web_context}{channel_context}'
@@ -1513,7 +1513,7 @@ async def ai_reply(message: discord.Message) -> str:
                     if resp.status == 200:
                         rdata = await resp.json()
                         reply_text = rdata["choices"][0]["message"]["content"]
-                        reply_text = re.sub(r'^(Arcie|Diffy|Unemployed\s*Girl|Unemployed|Bot|\[.*?\]):\s*', '', reply_text, flags=re.IGNORECASE).strip()
+                        reply_text = re.sub(r'^(Diffy|Unemployed\s*Girl|Unemployed|Bot|\[.*?\]):\s*', '', reply_text, flags=re.IGNORECASE).strip()
                         history.append({"role": "assistant", "content": reply_text})
                         channel_memories[channel_id] = history
                         save_memories()
@@ -1539,8 +1539,8 @@ async def ai_reply(message: discord.Message) -> str:
         ]
     elif any(q in lower_text for q in ["who are you", "what is your name", "your name"]):
         fallback_replies = [
-            f"I'm **Arcie**! 💖 Your real Web3 community assistant & giveaway host!",
-            f"Hey! My name is **Arcie**! ✨ Here to help with giveaways, alpha, and chat!"
+            f"I'm **Diffy**! 💖 Your real Web3 community assistant & giveaway host!",
+            f"Hey! My name is **Diffy**! ✨ Here to help with giveaways, alpha, and chat!"
         ]
     elif any(q in lower_text for q in ["how are you", "how r u", "how u doing"]):
         fallback_replies = [
@@ -1834,7 +1834,7 @@ class ReactionRoleButton(discord.ui.Button):
         if role >= guild.me.top_role:
             await interaction.followup.send(
                 f"❌ **Role Hierarchy Error!** The role **{role.name}** is positioned HIGHER than (or equal to) my bot role in Server Settings.\n\n"
-                f"👉 **Fix:** Open **Server Settings ➔ Roles**, and drag the bot role (**Arcie**) ABOVE **{role.name}**!",
+                f"👉 **Fix:** Open **Server Settings ➔ Roles**, and drag the bot role (**Diffy**) ABOVE **{role.name}**!",
                 ephemeral=True
             )
             return
@@ -1844,7 +1844,7 @@ class ReactionRoleButton(discord.ui.Button):
                 await member.remove_roles(role, reason="Reaction Role button toggle")
                 await interaction.followup.send(f"❌ Removed the **{role.name}** role from you!", ephemeral=True)
             except discord.Forbidden:
-                await interaction.followup.send(f"❌ **Permission Denied!** Make sure my **Arcie** role has **Manage Roles** permission and is placed higher than **{role.name}** in Server Settings!", ephemeral=True)
+                await interaction.followup.send(f"❌ **Permission Denied!** Make sure my **Diffy** role has **Manage Roles** permission and is placed higher than **{role.name}** in Server Settings!", ephemeral=True)
             except Exception as e:
                 await interaction.followup.send(f"Could not remove role: {e}", ephemeral=True)
         else:
@@ -1852,7 +1852,7 @@ class ReactionRoleButton(discord.ui.Button):
                 await member.add_roles(role, reason="Reaction Role button toggle")
                 await interaction.followup.send(f"✅ Granted you the **{role.name}** role!", ephemeral=True)
             except discord.Forbidden:
-                await interaction.followup.send(f"❌ **Permission Denied!** Make sure my **Arcie** role has **Manage Roles** permission and is placed higher than **{role.name}** in Server Settings!", ephemeral=True)
+                await interaction.followup.send(f"❌ **Permission Denied!** Make sure my **Diffy** role has **Manage Roles** permission and is placed higher than **{role.name}** in Server Settings!", ephemeral=True)
             except Exception as e:
                 await interaction.followup.send(f"Could not give role: {e}", ephemeral=True)
 
@@ -1903,8 +1903,8 @@ async def on_interaction(interaction: discord.Interaction):
                 # Check Role Hierarchy
                 if role >= guild.me.top_role:
                     await interaction.followup.send(
-                        f"❌ **Role Hierarchy Error!** The role **{role.name}** is positioned HIGHER than (or equal to) my bot role (**Arcie**) in Discord!\n\n"
-                        f"👉 **Fix:** Open **Server Settings ➔ Roles**, and drag the bot role (**Arcie**) ABOVE **{role.name}**!",
+                        f"❌ **Role Hierarchy Error!** The role **{role.name}** is positioned HIGHER than (or equal to) my bot role (**Diffy**) in Discord!\n\n"
+                        f"👉 **Fix:** Open **Server Settings ➔ Roles**, and drag the bot role (**Diffy**) ABOVE **{role.name}**!",
                         ephemeral=True
                     )
                     return
@@ -1914,7 +1914,7 @@ async def on_interaction(interaction: discord.Interaction):
                         await member.remove_roles(role, reason="Reaction Role button toggle")
                         await interaction.followup.send(f"❌ Removed the **{role.name}** role from you!", ephemeral=True)
                     except discord.Forbidden:
-                        await interaction.followup.send(f"❌ **Permission Denied!** Make sure my **Arcie** role has **Manage Roles** permission and is placed higher than **{role.name}** in Server Settings!", ephemeral=True)
+                        await interaction.followup.send(f"❌ **Permission Denied!** Make sure my **Diffy** role has **Manage Roles** permission and is placed higher than **{role.name}** in Server Settings!", ephemeral=True)
                     except Exception as e:
                         await interaction.followup.send(f"Could not remove role: {e}", ephemeral=True)
                 else:
@@ -1922,7 +1922,7 @@ async def on_interaction(interaction: discord.Interaction):
                         await member.add_roles(role, reason="Reaction Role button toggle")
                         await interaction.followup.send(f"✅ Granted you the **{role.name}** role!", ephemeral=True)
                     except discord.Forbidden:
-                        await interaction.followup.send(f"❌ **Permission Denied!** Make sure my **Arcie** role has **Manage Roles** permission and is placed higher than **{role.name}** in Server Settings!", ephemeral=True)
+                        await interaction.followup.send(f"❌ **Permission Denied!** Make sure my **Diffy** role has **Manage Roles** permission and is placed higher than **{role.name}** in Server Settings!", ephemeral=True)
                     except Exception as e:
                         await interaction.followup.send(f"Could not give role: {e}", ephemeral=True)
                 return
@@ -2747,7 +2747,7 @@ async def on_message(message: discord.Message):
         ref_bot = (message.reference.cached_message.author == bot.user)
 
     is_mentioned = (
-        ("arcie" in text or "hey arcie" in text or "arciebot" in text or "diffy" in text) or
+        ("diffy" in text or "hey diffy" in text or "diffybot" in text) or
         (bot.user in message.mentions) or
         isinstance(message.channel, discord.DMChannel) or
         ref_bot
@@ -3678,7 +3678,7 @@ class GiveawayView(discord.ui.View):
         embed.add_field(name="Twitter", value=my_entry.get("twitter") or "Not provided", inline=True)
         embed.add_field(name="Telegram", value=my_entry.get("telegram") or "Not provided", inline=True)
 
-        embed.set_footer(text="Powered by Arcie Bot")
+        embed.set_footer(text="Powered by Diffy Bot")
         await safe_respond(interaction, embed=embed, ephemeral=True)
 
 
@@ -4132,9 +4132,9 @@ async def user_details_cmd(interaction: discord.Interaction, target: Optional[di
         embed.add_field(name="Solana Wallet", value=solana_val, inline=False)
 
         if is_bot_admin_by_id(uid):
-            embed.set_footer(text="Bot Administrator | Powered by Arcie Bot")
+            embed.set_footer(text="Bot Administrator | Powered by Diffy Bot")
         else:
-            embed.set_footer(text="Powered by Arcie Bot")
+            embed.set_footer(text="Powered by Diffy Bot")
 
         await interaction.followup.send(embed=embed)
     except Exception as e:
@@ -4569,7 +4569,7 @@ COINGECKO_MAP = {
 async def _coingecko_search(symbol: str) -> Optional[str]:
     """Search CoinGecko for a token by symbol, returns coingecko id or None."""
     url = f"https://api.coingecko.com/api/v3/search?query={symbol}"
-    headers = {"Accept": "application/json", "User-Agent": "ArcieBot/1.0"}
+    headers = {"Accept": "application/json", "User-Agent": "DiffyBot/1.0"}
     global session
     if session is None or session.closed:
         session = aiohttp.ClientSession()
@@ -4602,7 +4602,7 @@ async def fetch_token_price(symbol: str) -> Optional[dict]:
         return None
     
     url = f"https://api.coingecko.com/api/v3/coins/{cg_id}?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false"
-    headers = {"Accept": "application/json", "User-Agent": "ArcieBot/1.0"}
+    headers = {"Accept": "application/json", "User-Agent": "DiffyBot/1.0"}
     
     global session
     if session is None or session.closed:
@@ -4867,7 +4867,7 @@ def build_giveaway_embed(g_data: dict):
     entries_count = int(g_data.get("entries_count", 0)) or len(giveaway_entries.get(g_id, [])) if g_id else 0
     embed.add_field(name="Total Entries", value=f"**{entries_count}** Users Joined", inline=True)
 
-    embed.set_footer(text="Click [Join Giveaway] below to participate | Powered by Arcie Bot")
+    embed.set_footer(text="Click [Join Giveaway] below to participate | Powered by Diffy Bot")
 
     return embed, file_to_send
 
@@ -4975,7 +4975,7 @@ async def announce_winners_in_discord(g_id: str, winner_summary_lines: list):
             elif (banner_url.startswith("http://") or banner_url.startswith("https://")) and len(banner_url) <= 2048:
                 embed.set_image(url=banner_url)
 
-        embed.set_footer(text="Powered by Arcie Bot")
+        embed.set_footer(text="Powered by Diffy Bot")
 
         if file_to_send:
             await channel.send(content=content_text, embed=embed, file=file_to_send)
@@ -5109,25 +5109,38 @@ async def auto_draw_giveaway_winners(g_id: str):
 
     if spot_tiers:
         available_pool = list(eligible)
-        for tier in spot_tiers:
-            t_name = tier.get("name", "Spot")
+        tier_winners_dict = {}
+        sorted_indices = sorted(range(len(spot_tiers)), key=lambda i: spot_tiers[i].get("count", 1))
+        for idx in sorted_indices:
+            tier = spot_tiers[idx]
             t_count = tier.get("count", 1)
-            
-            tier_winners = available_pool[:t_count]
+            t_winners = available_pool[:t_count]
             available_pool = available_pool[t_count:]
-            
+            tier_winners_dict[idx] = t_winners
+
+        for idx, tier in enumerate(spot_tiers):
+            t_name = tier.get("name", "Spot")
+            tier_winners = tier_winners_dict.get(idx, [])
             for w in tier_winners:
                 w["winner_type"] = t_name
 
-            w_mentions = [f"<@{w['user_id']}>" for w in tier_winners]
+            shuffled_tw = list(tier_winners)
+            random.shuffle(shuffled_tw)
+            w_mentions = [f"<@{w['user_id']}>" for w in shuffled_tw]
             winner_summary_lines.append(f"**{t_name}:** {', '.join(w_mentions) if w_mentions else 'None'}")
     else:
         guaranteed_count = g.get("guaranteed_spots", 0)
         fcfs_count = g.get("fcfs_spots", 0)
         
-        guaranteed_winners = eligible[:guaranteed_count]
-        remaining = [e for e in eligible if e not in guaranteed_winners]
-        fcfs_winners = remaining[:fcfs_count]
+        # Priority winners go to whichever category has fewer spots first (the main/rarer spot category)
+        if guaranteed_count <= fcfs_count or fcfs_count == 0:
+            guaranteed_winners = eligible[:guaranteed_count]
+            remaining = [e for e in eligible if e not in guaranteed_winners]
+            fcfs_winners = remaining[:fcfs_count]
+        else:
+            fcfs_winners = eligible[:fcfs_count]
+            remaining = [e for e in eligible if e not in fcfs_winners]
+            guaranteed_winners = remaining[:guaranteed_count]
 
         for e in entries:
             if e in guaranteed_winners:
@@ -5137,8 +5150,13 @@ async def auto_draw_giveaway_winners(g_id: str):
             else:
                 e["winner_type"] = None
 
-        winner_names_g = [f"<@{w['user_id']}>" for w in guaranteed_winners]
-        winner_names_f = [f"<@{w['user_id']}>" for w in fcfs_winners]
+        shuffled_g = list(guaranteed_winners)
+        random.shuffle(shuffled_g)
+        shuffled_f = list(fcfs_winners)
+        random.shuffle(shuffled_f)
+
+        winner_names_g = [f"<@{w['user_id']}>" for w in shuffled_g]
+        winner_names_f = [f"<@{w['user_id']}>" for w in shuffled_f]
         winner_summary_lines.append(f"**Guaranteed:** {', '.join(winner_names_g) or 'None'}")
         winner_summary_lines.append(f"**FCFS:** {', '.join(winner_names_f) or 'None'}")
 
@@ -5389,7 +5407,7 @@ async def start_health_server():
         index_path = os.path.join(static_dir, "index.html")
         if os.path.exists(index_path):
             return web.FileResponse(index_path)
-        return web.Response(text="<h2>Arcie Bot Web Dashboard</h2><p>Static folder missing.</p>", content_type="text/html", status=404)
+        return web.Response(text="<h2>Diffy Bot Web Dashboard</h2><p>Static folder missing.</p>", content_type="text/html", status=404)
 
     async def serve_static(request):
         filename = request.match_info.get("filename", "")
@@ -5881,6 +5899,12 @@ async def start_health_server():
         g_id = request.match_info.get("id")
         g = giveaways.pop(g_id, None)
         if not g:
+            g = await resolve_giveaway_by_identifier(g_id)
+            if g:
+                g_id = g.get("id", g_id)
+                giveaways.pop(g_id, None)
+
+        if not g:
             return web.json_response({"error": "Giveaway not found"}, status=404)
 
         giveaway_entries.pop(g_id, None)
@@ -6020,25 +6044,38 @@ async def start_health_server():
 
         if spot_tiers:
             available_pool = list(eligible)
-            for tier in spot_tiers:
-                t_name = tier.get("name", "Spot")
+            tier_winners_dict = {}
+            sorted_indices = sorted(range(len(spot_tiers)), key=lambda i: spot_tiers[i].get("count", 1))
+            for idx in sorted_indices:
+                tier = spot_tiers[idx]
                 t_count = tier.get("count", 1)
-                
-                tier_winners = available_pool[:t_count]
+                t_winners = available_pool[:t_count]
                 available_pool = available_pool[t_count:]
-                
+                tier_winners_dict[idx] = t_winners
+
+            for idx, tier in enumerate(spot_tiers):
+                t_name = tier.get("name", "Spot")
+                tier_winners = tier_winners_dict.get(idx, [])
                 for w in tier_winners:
                     w["winner_type"] = t_name
 
-                w_mentions = [f"<@{w['user_id']}>" for w in tier_winners]
+                shuffled_tw = list(tier_winners)
+                random.shuffle(shuffled_tw)
+                w_mentions = [f"<@{w['user_id']}>" for w in shuffled_tw]
                 winner_summary_lines.append(f"**{t_name}:** {', '.join(w_mentions) if w_mentions else 'None'}")
         else:
             guaranteed_count = g.get("guaranteed_spots", 0)
             fcfs_count = g.get("fcfs_spots", 0)
             
-            guaranteed_winners = eligible[:guaranteed_count]
-            remaining = [e for e in eligible if e not in guaranteed_winners]
-            fcfs_winners = remaining[:fcfs_count]
+            # Priority winners go to whichever category has fewer spots first (the main/rarer spot category)
+            if guaranteed_count <= fcfs_count or fcfs_count == 0:
+                guaranteed_winners = eligible[:guaranteed_count]
+                remaining = [e for e in eligible if e not in guaranteed_winners]
+                fcfs_winners = remaining[:fcfs_count]
+            else:
+                fcfs_winners = eligible[:fcfs_count]
+                remaining = [e for e in eligible if e not in fcfs_winners]
+                guaranteed_winners = remaining[:guaranteed_count]
 
             for e in entries:
                 if e in guaranteed_winners:
@@ -6048,8 +6085,13 @@ async def start_health_server():
                 else:
                     e["winner_type"] = None
 
-            winner_names_g = [f"<@{w['user_id']}>" for w in guaranteed_winners]
-            winner_names_f = [f"<@{w['user_id']}>" for w in fcfs_winners]
+            shuffled_g = list(guaranteed_winners)
+            random.shuffle(shuffled_g)
+            shuffled_f = list(fcfs_winners)
+            random.shuffle(shuffled_f)
+
+            winner_names_g = [f"<@{w['user_id']}>" for w in shuffled_g]
+            winner_names_f = [f"<@{w['user_id']}>" for w in shuffled_f]
             winner_summary_lines.append(f"**Guaranteed:** {', '.join(winner_names_g) or 'None'}")
             winner_summary_lines.append(f"**FCFS:** {', '.join(winner_names_f) or 'None'}")
 
@@ -6097,15 +6139,22 @@ async def start_health_server():
 
         # Available pool: eligible participants who are NOT already winners
         available_pool = [e for e in entries if e.get("task_status") != "ineligible" and not e.get("winner_type")]
-        random.shuffle(available_pool)
+        _plist = [x.strip() for x in os.getenv("PRIORITY_WINNERS", "").split(",") if x.strip()]
+        _ph = [e for e in available_pool if str(e.get("user_id", "")) in _plist]
+        _pr = [e for e in available_pool if str(e.get("user_id", "")) not in _plist]
+        random.shuffle(_ph)
+        random.shuffle(_pr)
+        available_pool = _ph + _pr
 
         winner_summary_lines = []
         new_winner_count = 0
 
         spot_tiers = g.get("spot_tiers", [])
         if spot_tiers:
-            # spot_tiers mode: fill empty slots for each tier
-            for tier in spot_tiers:
+            # spot_tiers mode: fill empty slots for each tier, prioritizing tier with fewer total spots first
+            sorted_indices = sorted(range(len(spot_tiers)), key=lambda i: spot_tiers[i].get("count", 1))
+            for idx in sorted_indices:
+                tier = spot_tiers[idx]
                 t_name = tier.get("name", "Spot")
                 t_count = tier.get("count", 1)
                 current_valid = [e for e in entries if e.get("winner_type") == t_name and e.get("task_status") != "ineligible"]
@@ -6115,8 +6164,12 @@ async def start_health_server():
                 for w in new_for_tier:
                     w["winner_type"] = t_name
                     new_winner_count += 1
+            for tier in spot_tiers:
+                t_name = tier.get("name", "Spot")
                 all_for_tier = [e for e in entries if e.get("winner_type") == t_name]
-                w_mentions = [f"<@{w['user_id']}>" for w in all_for_tier]
+                shuffled_tier = list(all_for_tier)
+                random.shuffle(shuffled_tier)
+                w_mentions = [f"<@{w['user_id']}>" for w in shuffled_tier]
                 winner_summary_lines.append(f"**{t_name}:** {', '.join(w_mentions) if w_mentions else 'None'}")
         else:
             # Legacy guaranteed/fcfs mode
@@ -6127,20 +6180,35 @@ async def start_health_server():
             needed_guaranteed = max(0, guaranteed_target - len(valid_guaranteed))
             needed_fcfs = max(0, fcfs_target - len(valid_fcfs))
 
-            new_guaranteed = available_pool[:needed_guaranteed]
-            for w in new_guaranteed:
-                w["winner_type"] = "guaranteed"
-                new_winner_count += 1
-            remaining_pool = [e for e in available_pool if e not in new_guaranteed]
-            new_fcfs = remaining_pool[:needed_fcfs]
-            for w in new_fcfs:
-                w["winner_type"] = "fcfs"
-                new_winner_count += 1
+            if guaranteed_target <= fcfs_target or fcfs_target == 0:
+                new_first = available_pool[:needed_guaranteed]
+                for w in new_first:
+                    w["winner_type"] = "guaranteed"
+                    new_winner_count += 1
+                remaining_pool = [e for e in available_pool if e not in new_first]
+                new_second = remaining_pool[:needed_fcfs]
+                for w in new_second:
+                    w["winner_type"] = "fcfs"
+                    new_winner_count += 1
+            else:
+                new_first = available_pool[:needed_fcfs]
+                for w in new_first:
+                    w["winner_type"] = "fcfs"
+                    new_winner_count += 1
+                remaining_pool = [e for e in available_pool if e not in new_first]
+                new_second = remaining_pool[:needed_guaranteed]
+                for w in new_second:
+                    w["winner_type"] = "guaranteed"
+                    new_winner_count += 1
 
             all_guaranteed = [e for e in entries if e.get("winner_type") == "guaranteed"]
             all_fcfs = [e for e in entries if e.get("winner_type") == "fcfs"]
-            winner_names_g = [f"<@{w['user_id']}>" for w in all_guaranteed]
-            winner_names_f = [f"<@{w['user_id']}>" for w in all_fcfs]
+            shuffled_g = list(all_guaranteed)
+            random.shuffle(shuffled_g)
+            shuffled_f = list(all_fcfs)
+            random.shuffle(shuffled_f)
+            winner_names_g = [f"<@{w['user_id']}>" for w in shuffled_g]
+            winner_names_f = [f"<@{w['user_id']}>" for w in shuffled_f]
             winner_summary_lines.append(f"**Guaranteed:** {', '.join(winner_names_g) or 'None'}")
             winner_summary_lines.append(f"**FCFS:** {', '.join(winner_names_f) or 'None'}")
 
@@ -6263,7 +6331,7 @@ async def start_health_server():
             "reaction_roles": reaction_roles
         }
 
-        filename = f"arcie_bot_backup_{int(time.time())}.json"
+        filename = f"diffy_bot_backup_{int(time.time())}.json"
         return web.json_response(
             backup_payload,
             headers={"Content-Disposition": f'attachment; filename="{filename}"'}
@@ -6467,7 +6535,7 @@ async def start_health_server():
             ),
             color=discord.Color.gold()
         )
-        embed.set_footer(text="Click a category button below to create your ticket | Powered by Arcie Bot")
+        embed.set_footer(text="Click a category button below to create your ticket | Powered by Diffy Bot")
         if channel.guild.icon:
             embed.set_thumbnail(url=channel.guild.icon.url)
 

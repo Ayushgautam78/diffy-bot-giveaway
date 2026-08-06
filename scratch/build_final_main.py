@@ -4,8 +4,11 @@ import sys
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-with open(r'c:\Users\pc\Desktop\Arcie bot\main.py', 'r', encoding='utf-8', errors='ignore') as f:
-    arcie_code = f.read()
+# Diffy Bot (Differential Degens) — build final main script
+# Merges extra features from bot-upload.zip into the Diffy bot main.py
+
+with open(r'c:\Users\pc\Desktop\unemployed bot\main.py', 'r', encoding='utf-8', errors='ignore') as f:
+    diffy_code = f.read()
 
 with zipfile.ZipFile('bot-upload.zip', 'r') as z:
     bot_upload_code = z.read('main.py').decode('utf-8', errors='ignore')
@@ -25,7 +28,7 @@ rumble_cmd_match = re.search(r'(@bot\.tree\.command\(name="royalrumble",[\s\S]*?
 rumble_cmd = rumble_cmd_match.group(1) if rumble_cmd_match else ""
 
 # 3. 2-Step Verification System from bot_upload_code
-verif_funcs_match = re.search(r'(# -------- Persistent 2-Step Verification System --------[\s\S]*?)(?=# -------- Support Ticket System --------|\n\nif os\.path\.exists\(TICKET_FILE\):)', bot_upload_code)
+verif_funcs_match = re.search(r'(# -------- Persistent 2-Step Verification System --------[\s\S]*?)(?=# -------- Support Ticket System --------|\\n\\nif os\.path\.exists\(TICKET_FILE\):)', bot_upload_code)
 verif_funcs = verif_funcs_match.group(1) if verif_funcs_match else ""
 
 verif_cmd_match = re.search(r'(@bot\.tree\.command\(name="setupverification",[\s\S]*?async def setup_verification_cmd[\s\S]*?\n\n@bot\.event)', bot_upload_code)
@@ -41,12 +44,12 @@ print(f"  Rumble funcs: {len(rumble_funcs)}, Rumble cmd: {len(rumble_cmd)}")
 print(f"  Verif funcs: {len(verif_funcs)}, Verif cmd: {len(verif_cmd)}")
 print(f"  Ticket cmds: {len(ticket_cmds)}")
 
-# Merge into arcie_code
-insert_pos = arcie_code.find("# -------- Support Ticket System -------- #")
+# Merge into diffy_code
+insert_pos = diffy_code.find("# -------- Support Ticket System -------- #")
 if insert_pos != -1:
-    final_code = arcie_code[:insert_pos] + price_funcs + "\n\n" + rumble_funcs + "\n\n" + verif_funcs + "\n\n" + arcie_code[insert_pos:]
+    final_code = diffy_code[:insert_pos] + price_funcs + "\n\n" + rumble_funcs + "\n\n" + verif_funcs + "\n\n" + diffy_code[insert_pos:]
 else:
-    final_code = arcie_code + "\n\n" + price_funcs + "\n\n" + rumble_funcs + "\n\n" + verif_funcs
+    final_code = diffy_code + "\n\n" + price_funcs + "\n\n" + rumble_funcs + "\n\n" + verif_funcs
 
 cmd_insert_pos = final_code.find('@bot.tree.command(name="sync"')
 if cmd_insert_pos != -1:
@@ -60,7 +63,7 @@ if on_ready_pos != -1:
     view_reg = "bot.add_view(TwoStepVerificationView())\n        bot.add_view(VerifyFollowingView())\n        "
     final_code = final_code[:on_ready_pos] + view_reg + final_code[on_ready_pos:]
 
-with open('main.py', 'w', encoding='utf-8') as f:
+with open(r'c:\Users\pc\Desktop\unemployed bot\main.py', 'w', encoding='utf-8') as f:
     f.write(final_code)
 
-print("Saved merged main.py successfully!")
+print("Saved Diffy Bot (Differential Degens) main.py successfully!")

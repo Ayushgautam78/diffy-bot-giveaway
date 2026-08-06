@@ -815,3 +815,96 @@ footer {
     font-size: 1.1rem;
   }
 }
+
+/* Discord Channel & Role Selection Panel */
+.discord-config-card {
+  background: linear-gradient(135deg, rgba(20, 26, 46, 0.7), rgba(12, 16, 30, 0.85));
+  border: 1px solid rgba(88, 101, 242, 0.35);
+  border-radius: var(--radius-md);
+  padding: 1.1rem;
+  margin-top: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
+}
+
+.discord-config-card:hover {
+  border-color: rgba(88, 101, 242, 0.6);
+  box-shadow: 0 4px 25px rgba(88, 101, 242, 0.15);
+}
+
+.discord-config-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.discord-config-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #7289da;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.discord-config-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.discord-selector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.selector-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: var(--transition);
+}
+
+.selector-box:focus-within, .selector-box:hover {
+  border-color: #5865f2;
+  box-shadow: 0 0 12px rgba(88, 101, 242, 0.2);
+}
+
+.selector-box-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-select-fancy {
+  background: rgba(18, 22, 38, 0.9) !important;
+  border: 1px solid rgba(88, 101, 242, 0.3) !important;
+  color: #aeb9ff !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  padding: 0.6rem 0.85rem !important;
+  font-size: 0.88rem !important;
+}
+
+.form-select-fancy option {
+  background: #111424 !important;
+  color: #e0e6ed !important;
+  padding: 8px !important;
+}
+
+.form-select-fancy optgroup {
+  background: #0d0f1c !important;
+  color: #7289da !important;
+  font-weight: 700 !important;
+}
+

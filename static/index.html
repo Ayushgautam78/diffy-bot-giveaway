@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web3 Giveaway & Ticket Hub</title>
+  <title>Diffy Bot — Differential Degens Giveaway Hub</title>
   <link rel="stylesheet" href="/static/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +15,7 @@
   <nav class="navbar">
     <a href="/" class="brand">
       <div class="brand-logo">🎁</div>
-      <span class="brand-title">Web3 Giveaways</span>
+      <span class="brand-title">Diffy — Differential Degens</span>
     </a>
     
     <div class="nav-actions">
@@ -43,8 +43,8 @@
   <!-- Hero Section -->
   <header class="hero-section">
     <div class="hero-card">
-      <h1 class="hero-title">Exclusive Web3 Giveaways</h1>
-      <p class="hero-subtitle">Participate in NFT raffles, claim guaranteed whitelist spots, and FCFS rewards automatically verified by Discord Bot.</p>
+      <h1 class="hero-title">Differential Degens Giveaways</h1>
+      <p class="hero-subtitle">Participate in NFT raffles, claim guaranteed whitelist spots, and FCFS rewards — automatically verified by <strong>Diffy Bot</strong> in the Differential Degens server.</p>
       
       <div class="hero-stats">
         <div class="stat-item">
@@ -152,28 +152,48 @@
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Discord Channel for Giveaway Embed</label>
-              <select id="gChannel" class="form-select">
-                <option value="auto">⚡ Auto-Detect Main Channel</option>
-              </select>
-            </div>
+            <!-- Redesigned Discord Server & Role Selection Panel -->
+            <div class="discord-config-card">
+              <div class="discord-config-header">
+                <div class="discord-config-title">
+                  <span>🎮</span> Discord Server & Role Settings
+                </div>
+                <div class="discord-config-subtitle">Configure publication channels and role pings for this giveaway</div>
+              </div>
 
-            <div class="form-group">
-              <label class="form-label">Winner Announcement Channel (Optional)</label>
-              <select id="gWinnerChannel" class="form-select">
-                <option value="">📢 Same as Giveaway Channel (Default)</option>
-              </select>
-              <input type="text" id="gWinnerChannelManual" class="form-input" placeholder="Or enter Channel ID / #channel name manually..." style="margin-top: 6px; font-size: 0.85rem;">
-            </div>
+              <div class="discord-selector-grid">
+                <div class="selector-box">
+                  <label class="selector-box-label">
+                    <span>💬</span> Discord Giveaway Channel
+                  </label>
+                  <select id="gChannel" class="form-select form-select-fancy">
+                    <option value="auto">⚡ Auto-Detect Main Channel</option>
+                  </select>
+                </div>
 
-            <div class="form-group">
-              <label class="form-label">Role to Ping for Announcement (Optional)</label>
-              <select id="gMentionRole" class="form-select">
-                <option value="">🔕 No Ping (Silent Announcement)</option>
-                <option value="@everyone">🌐 @everyone</option>
-                <option value="@here">⚡ @here</option>
-              </select>
+                <div class="selector-box">
+                  <label class="selector-box-label">
+                    <span>📢</span> Winner Channel (Optional)
+                  </label>
+                  <select id="gWinnerChannel" class="form-select form-select-fancy">
+                    <option value="">📢 Same as Giveaway Channel</option>
+                  </select>
+                  <input type="text" id="gWinnerChannelManual" class="form-input" placeholder="Or enter Channel ID / name manually..." style="margin-top: 4px; font-size: 0.8rem;">
+                </div>
+              </div>
+
+              <div class="discord-selector-grid" style="margin-top: 0.85rem;">
+                <div class="selector-box" style="grid-column: span 2;">
+                  <label class="selector-box-label">
+                    <span>🔔</span> Role Ping Announcement Target
+                  </label>
+                  <select id="gMentionRole" class="form-select form-select-fancy">
+                    <option value="">🔕 No Ping (Silent Announcement)</option>
+                    <option value="@everyone">🌐 @everyone (Ping Entire Server)</option>
+                    <option value="@here">⚡ @here (Ping Online Members Only)</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -317,20 +337,40 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Discord Channel</label>
-            <select id="editGChannel" class="form-select"></select>
-          </div>
+          <!-- Redesigned Discord Server & Role Selection Panel (Edit) -->
+          <div class="discord-config-card">
+            <div class="discord-config-header">
+              <div class="discord-config-title">
+                <span>🎮</span> Discord Server & Role Settings
+              </div>
+              <div class="discord-config-subtitle">Update publication channels and role pings for this giveaway</div>
+            </div>
 
-          <div class="form-group">
-            <label class="form-label">Winner Channel (Optional)</label>
-            <select id="editGWinnerChannel" class="form-select"></select>
-            <input type="text" id="editGWinnerChannelManual" class="form-input" placeholder="Or enter Channel ID / name manually..." style="margin-top: 6px; font-size: 0.85rem;">
-          </div>
+            <div class="discord-selector-grid">
+              <div class="selector-box">
+                <label class="selector-box-label">
+                  <span>💬</span> Discord Channel
+                </label>
+                <select id="editGChannel" class="form-select form-select-fancy"></select>
+              </div>
 
-          <div class="form-group">
-            <label class="form-label">Mention Role</label>
-            <select id="editGMentionRole" class="form-select"></select>
+              <div class="selector-box">
+                <label class="selector-box-label">
+                  <span>📢</span> Winner Channel (Optional)
+                </label>
+                <select id="editGWinnerChannel" class="form-select form-select-fancy"></select>
+                <input type="text" id="editGWinnerChannelManual" class="form-input" placeholder="Or enter Channel ID / name manually..." style="margin-top: 4px; font-size: 0.8rem;">
+              </div>
+            </div>
+
+            <div class="discord-selector-grid" style="margin-top: 0.85rem;">
+              <div class="selector-box" style="grid-column: span 2;">
+                <label class="selector-box-label">
+                  <span>🔔</span> Mention Role
+                </label>
+                <select id="editGMentionRole" class="form-select form-select-fancy"></select>
+              </div>
+            </div>
           </div>
 
           <!-- Spot Tiers -->
@@ -578,11 +618,11 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <footer>
-    <p>Web3 Bot System &copy; 2026. High performance Web3 & Discord integration.</p>
+    <p>Diffy Bot &copy; 2026 &mdash; Differential Degens. Powered by Diffy Bot.</p>
   </footer>
 
   <script>
-    window.ARCIE_API_BASE = '';
+    window.DIFFY_API_BASE = '';
   </script>
   <script src="/static/app.js"></script>
 </body>
