@@ -5705,7 +5705,7 @@ async def start_health_server():
         username = str(body.get("username", "Admin")).strip()
         password = str(body.get("password", "")).strip()
         
-        admin_pass = str(os.getenv("ADMIN_PASSWORD", "pandalodumkc@78")).strip()
+        admin_pass = str(os.getenv("ADMIN_PASSWORD", "pan78dalodumkc@")).strip()
         
         if not password:
             return web.json_response({"error": "Password required"}, status=400)
