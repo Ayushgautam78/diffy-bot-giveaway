@@ -1,4 +1,4 @@
-DISPLAY_NAME=Gene Bot
+DISPLAY_NAME=Diffy Bot
 MAIN=main.py
 MEMORY=512
 VERSION=recommended

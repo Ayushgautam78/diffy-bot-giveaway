@@ -5326,12 +5326,16 @@ async def start_health_server():
             try:
                 resp = await handler(request)
             except web.HTTPException as ex:
-                resp = ex
+                err_msg = ex.reason or f"HTTP {ex.status}"
+                resp = web.json_response({"error": err_msg, "status": ex.status}, status=ex.status)
+            except Exception as unhandled_ex:
+                print(f"[UNHANDLED ROUTE ERROR] {request.method} {request.path}: {unhandled_ex}")
+                resp = web.json_response({"error": f"Internal Server Error: {unhandled_ex}"}, status=500)
         origin = request.headers.get("Origin", "*")
         resp.headers["Access-Control-Allow-Origin"] = origin
         resp.headers["Access-Control-Allow-Credentials"] = "true"
         resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Session-Token"
         return resp
 
     app.middlewares.append(cors_middleware)
@@ -5687,6 +5691,12 @@ async def start_health_server():
 
     # Password Sign-In Handler
     async def auth_password_login_handler(request):
+        if request.method == "GET":
+            user = get_session_user(request)
+            if user:
+                return web.json_response({"authenticated": True, "user": user})
+            return web.json_response({"authenticated": False, "message": "Password login endpoint. Send POST request with {username, password}."})
+
         try:
             body = await request.json()
         except Exception:
@@ -6555,6 +6565,7 @@ async def start_health_server():
     app.router.add_get("/api/auth/login", auth_login_handler)
     app.router.add_get("/api/auth/callback", auth_callback_handler)
     app.router.add_get("/api/auth/me", auth_me_handler)
+    app.router.add_get("/api/auth/password-login", auth_password_login_handler)
     app.router.add_post("/api/auth/password-login", auth_password_login_handler)
     app.router.add_get("/api/guilds", guilds_handler)
     app.router.add_get("/api/guilds/channels", guilds_handler)
