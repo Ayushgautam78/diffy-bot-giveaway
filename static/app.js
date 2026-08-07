@@ -1,7 +1,12 @@
 /* SPA Logic for Diffy Bot — Differential Degens Giveaway Hub */
 
+function getApiBase() {
+  let base = window.DIFFY_API_BASE || localStorage.getItem('diffy_api_base') || '';
+  return base.replace(/\/+$/, '');
+}
+
 function apiUrl(path) {
-  const base = (window.DIFFY_API_BASE || '').replace(/\/+$/, '');
+  const base = getApiBase();
   return base ? `${base}${path}` : path;
 }
 
@@ -18,7 +23,7 @@ async function authFetch(url, options = {}) {
   try {
     res = await fetch(url, options);
   } catch (netErr) {
-    return { ok: false, status: 0, data: { error: 'Network error or server unreachable' }, res: null };
+    return { ok: false, status: 0, data: { error: 'Network error or server unreachable. Make sure main.py is running.' }, res: null };
   }
 
   let text = '';
@@ -30,14 +35,19 @@ async function authFetch(url, options = {}) {
 
   let data = {};
   if (text && text.trim()) {
-    try {
-      data = JSON.parse(text);
-    } catch (pErr) {
-      console.warn('Non-JSON response:', res.status, text.substring(0, 150));
-      data = { error: `Server error (${res.status}): ${res.statusText || 'Invalid response'}` };
+    const trimmed = text.trim();
+    if (trimmed.startsWith('<') || trimmed.toLowerCase().startsWith('<!doctype')) {
+      data = { error: `Endpoint returned HTML instead of JSON (Status ${res.status}). Ensure Backend Bot Server URL points to Python server.` };
+    } else {
+      try {
+        data = JSON.parse(text);
+      } catch (pErr) {
+        console.warn('Non-JSON response:', res.status, text.substring(0, 150));
+        data = { error: `Server error (${res.status}): Invalid response format` };
+      }
     }
   } else {
-    data = res.ok ? { success: true } : { error: `Empty response from server (${res.status})` };
+    data = res.ok ? { success: true } : { error: `Empty response from server (Status ${res.status}). Ensure main.py is running.` };
   }
 
   return { ok: res.ok, status: res.status, data, res };
@@ -302,6 +312,15 @@ async function submitPasswordLogin(e) {
   e.preventDefault();
   const username = document.getElementById('passUser').value.trim();
   const password = document.getElementById('passWord').value.trim();
+  const customApiBase = document.getElementById('passApiBase')?.value.trim();
+
+  if (customApiBase !== undefined && customApiBase !== null) {
+    if (customApiBase) {
+      localStorage.setItem('diffy_api_base', customApiBase.replace(/\/+$/, ''));
+    } else {
+      localStorage.removeItem('diffy_api_base');
+    }
+  }
 
   try {
     const { ok, data } = await authFetch(apiUrl('/api/auth/password-login'), {
@@ -1385,7 +1404,15 @@ async function submitCustomWinners() {
 }
 
 function openModal(id) {
-  document.getElementById(id).classList.add('active');
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (id === 'passLoginModal') {
+    const apiInput = document.getElementById('passApiBase');
+    if (apiInput) {
+      apiInput.value = localStorage.getItem('diffy_api_base') || '';
+    }
+  }
+  el.classList.add('active');
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('active');

@@ -12,6 +12,10 @@
       "dest": "/static/$1"
     },
     {
+      "src": "/api/(.*)",
+      "dest": "http://n2.nccloud.sbs:2026/api/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/static/index.html"
     }
