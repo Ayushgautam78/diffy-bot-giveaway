@@ -5713,7 +5713,7 @@ async def start_health_server():
         token = base64.b64encode(os.urandom(24)).decode('utf-8')
         active_sessions[token] = {"user": admin_user, "expires_at": time.time() + 86400 * 30}
         
-        resp = web.json_response({"success": True, "user": admin_user})
+        resp = web.json_response({"success": True, "token": token, "user": admin_user})
         resp.set_cookie("session_token", token, max_age=86400 * 30, path="/", samesite="Lax")
         print(f"[AUTH LOGIN SUCCESS] Admin '{username}' signed in successfully.")
         return resp

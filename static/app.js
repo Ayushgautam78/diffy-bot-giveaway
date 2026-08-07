@@ -5,6 +5,44 @@ function apiUrl(path) {
   return base ? `${base}${path}` : path;
 }
 
+async function authFetch(url, options = {}) {
+  options.credentials = 'include';
+  options.headers = options.headers || {};
+  const token = localStorage.getItem('bot_admin_token');
+  if (token) {
+    options.headers['Authorization'] = `Bearer ${token}`;
+    options.headers['X-Session-Token'] = token;
+  }
+
+  let res;
+  try {
+    res = await fetch(url, options);
+  } catch (netErr) {
+    return { ok: false, status: 0, data: { error: 'Network error or server unreachable' }, res: null };
+  }
+
+  let text = '';
+  try {
+    text = await res.text();
+  } catch (txtErr) {
+    text = '';
+  }
+
+  let data = {};
+  if (text && text.trim()) {
+    try {
+      data = JSON.parse(text);
+    } catch (pErr) {
+      console.warn('Non-JSON response:', res.status, text.substring(0, 150));
+      data = { error: `Server error (${res.status}): ${res.statusText || 'Invalid response'}` };
+    }
+  } else {
+    data = res.ok ? { success: true } : { error: `Empty response from server (${res.status})` };
+  }
+
+  return { ok: res.ok, status: res.status, data, res };
+}
+
 let currentUser = null;
 let currentGiveaways = [];
 let currentFilter = 'active';
@@ -94,27 +132,25 @@ function setupEventListeners() {
 
 async function loadGuildChannels() {
   try {
-    const res = await fetch(apiUrl('/api/guilds/channels'), { credentials: 'include' });
-    if (!res.ok) return;
-    const channels = await res.json();
+    const { ok, data } = await authFetch(apiUrl('/api/guilds/channels'));
+    if (!ok || !Array.isArray(data) || data.length === 0) return;
+    const channels = data;
 
-    if (Array.isArray(channels) && channels.length > 0) {
-      const options = channels.map(c =>
-        `<option value="${c.id}">💬 #${escapeHtml(c.name)}  •  ${escapeHtml(c.guild_name || 'Server')}</option>`
-      ).join('');
+    const options = channels.map(c =>
+      `<option value="${c.id}">💬 #${escapeHtml(c.name)}  •  ${escapeHtml(c.guild_name || 'Server')}</option>`
+    ).join('');
 
-      const gCh = document.getElementById('gChannel');
-      if (gCh) gCh.innerHTML = '<option value="auto">⚡ Auto-Detect Main Channel</option>' + options;
+    const gCh = document.getElementById('gChannel');
+    if (gCh) gCh.innerHTML = '<option value="auto">⚡ Auto-Detect Main Channel</option>' + options;
 
-      const gWin = document.getElementById('gWinnerChannel');
-      if (gWin) gWin.innerHTML = '<option value="">📢 Same as Giveaway Channel (Default)</option>' + options;
+    const gWin = document.getElementById('gWinnerChannel');
+    if (gWin) gWin.innerHTML = '<option value="">📢 Same as Giveaway Channel (Default)</option>' + options;
 
-      const editGWin = document.getElementById('editGWinnerChannel');
-      if (editGWin) editGWin.innerHTML = '<option value="">📢 Same as Giveaway Channel (Default)</option>' + options;
+    const editGWin = document.getElementById('editGWinnerChannel');
+    if (editGWin) editGWin.innerHTML = '<option value="">📢 Same as Giveaway Channel (Default)</option>' + options;
 
-      const editGCh = document.getElementById('editGChannel');
-      if (editGCh) editGCh.innerHTML = '<option value="">-- Same as current channel --</option>' + options;
-    }
+    const editGCh = document.getElementById('editGChannel');
+    if (editGCh) editGCh.innerHTML = '<option value="">-- Same as current channel --</option>' + options;
   } catch (err) {
     console.error('Failed to load channels:', err);
   }
@@ -122,9 +158,9 @@ async function loadGuildChannels() {
 
 async function loadGuildRoles() {
   try {
-    const res = await fetch(apiUrl('/api/guilds/roles'), { credentials: 'include' });
-    if (!res.ok) return;
-    const roles = await res.json();
+    const { ok, data } = await authFetch(apiUrl('/api/guilds/roles'));
+    if (!ok || !Array.isArray(data)) return;
+    const roles = data;
 
     if (!Array.isArray(roles)) return;
 
@@ -268,15 +304,17 @@ async function submitPasswordLogin(e) {
   const password = document.getElementById('passWord').value.trim();
 
   try {
-    const res = await fetch(apiUrl('/api/auth/password-login'), {
+    const { ok, data } = await authFetch(apiUrl('/api/auth/password-login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
       body: JSON.stringify({ username, password })
     });
-    const data = await res.json();
-    if (res.ok && data.success) {
+
+    if (ok && data.success) {
       currentUser = data.user || { id: 'admin_' + Date.now(), username: username || 'Admin', is_admin: true };
+      if (data.token) {
+        localStorage.setItem('bot_admin_token', data.token);
+      }
       localStorage.setItem('bot_admin', JSON.stringify(currentUser));
       showToast('🚀 Signed in as Admin!', 'success');
       closeModal('passLoginModal');
@@ -297,6 +335,7 @@ async function submitPasswordLogin(e) {
 function adminLogout() {
   if (confirm('Sign out?')) {
     localStorage.removeItem('bot_admin');
+    localStorage.removeItem('bot_admin_token');
     currentUser = null;
     checkAuth();
     showToast('Signed out', 'info');
@@ -306,9 +345,9 @@ function adminLogout() {
 
 async function loadGiveaways() {
   try {
-    const res = await fetch(apiUrl('/api/giveaways'), { credentials: 'include' });
-    if (res.ok) {
-      currentGiveaways = await res.json();
+    const { ok, data } = await authFetch(apiUrl('/api/giveaways'));
+    if (ok && Array.isArray(data)) {
+      currentGiveaways = data;
     } else {
       currentGiveaways = [];
     }
